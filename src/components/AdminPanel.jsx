@@ -199,7 +199,7 @@ function AdminPanel() {
   }
 
   const pendingOrders = orders.filter((o) => o.status === "Pending");
-  const acknowledgedOrders = orders.filter((o) => o.status === "Acknowledged");
+  const acknowledgedOrders = orders.filter((o) => o.status === "Preparing");
   const servingOrders = orders.filter((o) => o.status === "Serving");
   const servedOrders = orders.filter((o) => o.status === "Served");
 
@@ -357,7 +357,7 @@ function AdminPanel() {
           title="Pending Orders"
           orders={pendingOrders}
           onStatusChange={updateOrderStatus}
-          nextStatus="Acknowledged"
+          nextStatus="Preparing"
         />
 
         <OrderSection
