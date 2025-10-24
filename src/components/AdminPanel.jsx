@@ -361,7 +361,7 @@ function AdminPanel() {
         />
 
         <OrderSection
-          title="Acknowledged Orders"
+          title="Preparing Orders"
           orders={acknowledgedOrders}
           onStatusChange={updateOrderStatus}
           nextStatus="Serving"
