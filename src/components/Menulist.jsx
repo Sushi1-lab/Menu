@@ -143,12 +143,12 @@ function MenuList() {
   // 👇 Selection form (before showing the menu)
   if (!showMenu) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-amber-50 p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-amber-50 p-4 sm:p-6">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
+          className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-md"
         >
           <h2 className="text-2xl font-bold text-blue-900 text-center mb-6">
             Welcome to Café
@@ -159,7 +159,7 @@ function MenuList() {
             <label className="block font-semibold mb-3 text-gray-700 text-center text-lg">
               Select Order Type
             </label>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-4 flex-wrap">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -219,16 +219,16 @@ function MenuList() {
   const sortedCategories = Object.keys(groupedMenu).sort();
 
   return (
-    <div className="p-6 bg-amber-50 min-h-screen relative">
+    <div className="p-4 sm:p-6 bg-amber-50 min-h-screen relative">
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-blue-900">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-blue-900 text-center sm:text-left">
           {orderType === "Dine-In"
             ? `Table ${tableNumber} - Dine-In Menu`
             : "Take-Out Menu"}
         </h1>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center sm:justify-end">
           {orderType === "Dine-In" && (
             <button
               onClick={handleChangeTable}
@@ -255,7 +255,7 @@ function MenuList() {
             {category}
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {groupedMenu[category].map((item, index) => (
               <motion.div
                 key={item.id}
@@ -267,7 +267,7 @@ function MenuList() {
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-40 object-cover rounded-lg"
+                  className="w-full h-40 sm:h-48 md:h-56 object-cover rounded-lg"
                 />
                 <h3 className="text-lg font-semibold text-blue-900 mt-2">
                   {item.name}
@@ -295,7 +295,7 @@ function MenuList() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 100 }}
-            className="fixed top-0 right-0 w-full md:w-96 h-full bg-white shadow-2xl p-6 z-50 flex flex-col"
+            className="fixed top-0 right-0 w-full sm:w-80 md:w-96 h-full bg-white shadow-2xl p-4 sm:p-6 z-50 flex flex-col"
           >
             <h2 className="text-xl font-bold text-blue-900 mb-4">Your Cart</h2>
             {cart.length === 0 ? (
