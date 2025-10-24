@@ -183,16 +183,34 @@ function MenuList() {
         createdAt: serverTimestamp(),
       });
 
-      Swal.fire({
-        title: "✅ Order Placed!",
-        html: `
-          <p>Your order is now being processed 🎉</p>
-          <p><strong>Order Code:</strong> 
-          <span style="font-size:1.5em; color:#1e3a8a;">${orderCode}</span></p>
-        `,
-        icon: "success",
-        confirmButtonColor: "#1e3a8a",
+    Swal.fire({
+  title: "✅ Order Placed!",
+  html: `
+    <p>Your order is now being processed 🎉</p>
+    <p><strong>Order Code:</strong> 
+    <span style="font-size:1.5em; color:#1e3a8a;">${orderCode}</span></p>
+    <button id="proceedCounterBtn" 
+      style="margin-top:15px; background-color:#1e3a8a; color:white; border:none; 
+      padding:10px 20px; border-radius:8px; cursor:pointer;">
+      Proceed to Counter
+    </button>
+  `,
+  icon: "success",
+  showConfirmButton: false,
+  didOpen: () => {
+    document
+      .getElementById("proceedCounterBtn")
+      .addEventListener("click", () => {
+        Swal.fire({
+          title: "💰 Proceed to Counter",
+          text: "Please proceed to the counter for payment. Thank you!",
+          icon: "info",
+          confirmButtonColor: "#1e3a8a",
+        });
       });
+  },
+});
+
 
       setCart([]);
       setShowCart(false);
