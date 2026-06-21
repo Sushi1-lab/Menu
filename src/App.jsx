@@ -1,111 +1,153 @@
 import { useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import { Menu, X } from "lucide-react"; // 🧩 Lucide icons
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { User, Shield } from "lucide-react";
+
 import MenuList from "./components/Menulist.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
 import AdminLogin from "./components/AdminLogin.jsx";
 
-function App() {
-  const [isOpen, setIsOpen] = useState(false); // 🟢 Burger menu toggle state
+function RoleSelect() {
+  const navigate = useNavigate();
+  const [guestName, setGuestName] = useState("");
+
+  const handleGuestContinue = () => {
+    const finalName = guestName.trim() || "Guest";
+    localStorage.setItem("customerName", finalName);
+    navigate("/menu");
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-amber-50 font-sans">
-      {/* Navbar */}
-      <nav className="bg-blue-800 text-white p-4 shadow-xl sticky top-0 z-10">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
-          {/* Brand Name */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wider cursor-pointer">
-            <Link
-              to="/"
-              className="text-amber-200 hover:text-white transition duration-200"
-              onClick={() => setIsOpen(false)} // close menu when clicked
-            >
-              Kapehan ni Marl
-            </Link>
-          </h1>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex gap-6 items-center">
-            <Link
-              to="/menu"
-              className="text-lg font-medium hover:text-amber-200 transition-all duration-200 border-b-2 border-transparent hover:border-amber-200 pb-1"
-            >
-              Menu
-            </Link>
-            <Link
-              to="/admin-login"
-              className="text-lg font-medium hover:text-amber-200 transition-all duration-200 border-b-2 border-transparent hover:border-amber-200 pb-1"
-            >
-              Admin Login
-            </Link>
-            <Link
-              to="/admin"
-              className="text-lg font-medium bg-amber-400 text-blue-900 px-4 py-2 rounded-full shadow-md hover:bg-amber-300 transition-all duration-200"
-            >
-              Admin Panel
-            </Link>
+    <div className="min-h-screen flex items-center justify-center bg-amber-50 px-4">
+      <div className="w-full max-w-4xl grid md:grid-cols-2 gap-6">
+        
+        {/* Customer */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-amber-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-amber-100 p-3 rounded-full">
+              <User className="text-amber-700" size={28} />
+            </div>
+            <h2 className="text-2xl font-bold text-blue-900">Customer</h2>
           </div>
 
-          {/* Mobile Burger Button */}
+          <p className="text-gray-600 mb-5">
+            Continue as a guest and place your order.
+          </p>
+
+          <input
+            type="text"
+            placeholder="Enter your name (optional)"
+            value={guestName}
+            onChange={(e) => setGuestName(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-3 mb-4"
+          />
+
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-amber-200 hover:text-white transition"
+            onClick={handleGuestContinue}
+            className="w-full bg-amber-400 text-blue-900 font-semibold py-3 rounded-lg hover:bg-amber-300"
           >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
+            Continue as Guest
           </button>
         </div>
 
-        {/* Mobile Dropdown Menu */}
-        {isOpen && (
-          <div className="md:hidden flex flex-col items-center gap-4 mt-4 bg-blue-700 py-4 rounded-lg shadow-lg">
-            <Link
-              to="/menu"
-              onClick={() => setIsOpen(false)}
-              className="text-lg font-medium hover:text-amber-200 transition-all duration-200"
-            >
-              Menu
-            </Link>
-            <Link
-              to="/admin-login"
-              onClick={() => setIsOpen(false)}
-              className="text-lg font-medium hover:text-amber-200 transition-all duration-200"
-            >
-              Admin Login
-            </Link>
-            <Link
-              to="/admin"
-              onClick={() => setIsOpen(false)}
-              className="text-lg font-medium bg-amber-400 text-blue-900 px-4 py-2 rounded-full shadow-md hover:bg-amber-300 transition-all duration-200"
-            >
-              Admin Panel
-            </Link>
+        {/* Admin */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-blue-100">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Shield className="text-blue-800" size={28} />
+            </div>
+            <h2 className="text-2xl font-bold text-blue-900">Admin</h2>
           </div>
-        )}
-      </nav>
 
-      {/* Main Content */}
-      <main className="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full">
-        <Routes>
-          <Route path="/" element={<MenuList />} />
-          <Route path="/menu" element={<MenuList />} />
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route
-            path="*"
-            element={
-              <div className="text-center text-xl text-gray-500 mt-20">
-                404: Page not found.
-              </div>
-            }
-          />
-        </Routes>
-      </main>
+          <p className="text-gray-600 mb-5">
+            Login to manage menu items and customer orders.
+          </p>
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-amber-100 py-4 text-center text-sm shadow-inner mt-auto">
-        © {new Date().getFullYear()} Kapehan ni Marl. All Rights Reserved.
-      </footer>
+          <button
+            onClick={() => navigate("/admin-login")}
+            className="w-full bg-blue-800 text-white font-semibold py-3 rounded-lg hover:bg-blue-700"
+          >
+            Login as Admin
+          </button>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function MenuWrapper() {
+  const navigate = useNavigate();
+
+  return (
+    <div>
+      <div className="p-4 bg-white shadow flex justify-between items-center">
+        <h1 className="font-bold text-xl text-blue-900">
+          Customer Menu
+        </h1>
+
+        <button
+          onClick={() => navigate("/")}
+          className="bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        >
+          Back
+        </button>
+      </div>
+
+      <MenuList />
+    </div>
+  );
+}
+
+function AdminWrapper() {
+  const navigate = useNavigate();
+
+  return (
+    <div>
+      <div className="p-4 bg-white shadow flex justify-between items-center">
+        <h1 className="font-bold text-xl text-blue-900">
+          Admin Panel
+        </h1>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("/menu")}
+            className="bg-amber-500 text-white px-4 py-2 rounded-lg hover:bg-amber-600"
+          >
+            Customer View
+          </button>
+
+          <button
+            onClick={() => navigate("/")}
+            className="bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
+      <AdminPanel />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<RoleSelect />} />
+      <Route path="/menu" element={<MenuWrapper />} />
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminWrapper />} />
+
+      <Route
+        path="*"
+        element={
+          <div className="min-h-screen flex items-center justify-center">
+            <h1 className="text-2xl text-gray-500">
+              404 - Page Not Found
+            </h1>
+          </div>
+        }
+      />
+    </Routes>
   );
 }
 

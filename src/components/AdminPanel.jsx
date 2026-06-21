@@ -28,71 +28,98 @@ function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
-  // ✅ Handle auth state (admin login)
+  // Handle auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
-  // ✅ Fetch menu
+  // Fetch menu
   const fetchMenu = async () => {
-    const querySnapshot = await getDocs(collection(db, "menu"));
-    const items = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setMenu(items);
+    try {
+      const querySnapshot = await getDocs(collection(db, "menu"));
+      const items = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMenu(items);
+    } catch (error) {
+      console.error("Fetch menu error:", error);
+    }
   };
 
-  // ✅ Realtime listener for orders (includes notifications)
+  // Load menu once user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchMenu();
+    }
+  }, [user]);
+
+  // Realtime listener for orders
   useEffect(() => {
     if (!user) return;
 
     const ordersRef = collection(db, "orders");
-    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
-      const newOrders = [];
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          newOrders.push({ id: change.doc.id, ...change.doc.data() });
-        }
-      });
 
-      // ✅ Notify admin of new orders
-      if (newOrders.length > 0) {
-        newOrders.forEach((order) => {
-          showNotification(
-            `🛎️ New Order Received!`,
-            `Table ${order.tableNumber || "N/A"} - ₱${order.totalAmount || 0}`
-          );
+    const unsubscribe = onSnapshot(
+      ordersRef,
+      (snapshot) => {
+        const newOrders = [];
+
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            newOrders.push({ id: change.doc.id, ...change.doc.data() });
+          }
         });
-      }
 
-      // ✅ Update full orders list
-      const allOrders = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setOrders(allOrders);
-    });
+        if (newOrders.length > 0) {
+          newOrders.forEach((order) => {
+            showNotification(
+              "🛎️ New Order Received!",
+              `Table ${order.tableNumber || "N/A"} - ₱${order.totalAmount || 0}`
+            );
+          });
+        }
+
+        const allOrders = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setOrders(allOrders);
+      },
+      (error) => {
+        console.error("Orders listener error:", error);
+      }
+    );
 
     return () => unsubscribe();
   }, [user]);
 
-  // ✅ Notification display logic
+  // Notification display logic
   const showNotification = (title, message) => {
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setNotifications((prev) => [...prev, { id, title, message }]);
+
     setTimeout(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, 4000); // hide after 4s
+    }, 4000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const itemData = { ...newItem, price: Number(newItem.price) };
+
+    const itemData = {
+      name: newItem.name.trim(),
+      price: Number(newItem.price),
+      category: newItem.category,
+      image: newItem.image.trim(),
+      description: newItem.description.trim(),
+    };
 
     try {
       if (editingId) {
@@ -110,6 +137,7 @@ function AdminPanel() {
         image: "",
         description: "",
       });
+
       fetchMenu();
     } catch (error) {
       console.error("Error saving item:", error);
@@ -117,22 +145,40 @@ function AdminPanel() {
   };
 
   const handleEdit = (item) => {
-    setNewItem(item);
+    setNewItem({
+      name: item.name || "",
+      price: item.price || "",
+      category: item.category || "",
+      image: item.image || "",
+      description: item.description || "",
+    });
     setEditingId(item.id);
   };
 
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, "menu", id));
-    fetchMenu();
+    try {
+      await deleteDoc(doc(db, "menu", id));
+      fetchMenu();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status: newStatus });
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, { status: newStatus });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+    }
   };
 
   const exportToExcel = () => {
@@ -159,7 +205,9 @@ function AdminPanel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Orders");
 
-    const columnWidths = Object.keys(formattedOrders[0]).map(() => ({ wch: 20 }));
+    const columnWidths = Object.keys(formattedOrders[0]).map(() => ({
+      wch: 20,
+    }));
     ws["!cols"] = columnWidths;
 
     const month = new Date().toLocaleString("default", { month: "long" });
@@ -199,7 +247,7 @@ function AdminPanel() {
   }
 
   const pendingOrders = orders.filter((o) => o.status === "Pending");
-  const acknowledgedOrders = orders.filter((o) => o.status === "Preparing");
+  const preparingOrders = orders.filter((o) => o.status === "Preparing");
   const servingOrders = orders.filter((o) => o.status === "Serving");
   const servedOrders = orders.filter((o) => o.status === "Served");
 
@@ -207,7 +255,7 @@ function AdminPanel() {
     <div className="relative p-6 max-w-7xl mx-auto space-y-10 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-blue-800">
-          Admin Panel — Manage Menu & Orders
+          Admin Panel - Manage Menu & Orders
         </h1>
         <div className="flex gap-3">
           <button
@@ -225,7 +273,6 @@ function AdminPanel() {
         </div>
       </div>
 
-      {/* ---------------- MENU MANAGEMENT ---------------- */}
       <section>
         <h2 className="text-2xl font-semibold text-blue-900 mb-4">
           Manage Menu
@@ -255,7 +302,10 @@ function AdminPanel() {
           <select
             className="border p-3 rounded bg-white"
             value={newItem.category}
-            onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+            onChange={(e) =>
+              setNewItem({ ...newItem, category: e.target.value })
+            }
+            required
           >
             <option value="">Select Category</option>
             <option value="Coffee">Coffee</option>
@@ -274,6 +324,7 @@ function AdminPanel() {
             onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
             required
           />
+
           {newItem.image && (
             <img
               src={newItem.image}
@@ -299,7 +350,6 @@ function AdminPanel() {
           </button>
         </form>
 
-        {/* Menu List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {menu.map((item, index) => (
             <motion.div
@@ -316,6 +366,7 @@ function AdminPanel() {
                   className="w-full h-40 object-cover rounded-lg"
                 />
               )}
+
               <div className="mt-3">
                 <h2 className="text-lg font-semibold text-blue-900">
                   {item.name}
@@ -328,6 +379,7 @@ function AdminPanel() {
                   Category: {item.category}
                 </p>
               </div>
+
               <div className="flex justify-between mt-4">
                 <button
                   onClick={() => handleEdit(item)}
@@ -347,7 +399,6 @@ function AdminPanel() {
         </div>
       </section>
 
-      {/* ---------------- CUSTOMER ORDERS ---------------- */}
       <section>
         <h2 className="text-2xl font-semibold text-blue-900 mt-10 mb-4">
           Customer Orders
@@ -362,7 +413,7 @@ function AdminPanel() {
 
         <OrderSection
           title="Preparing Orders"
-          orders={acknowledgedOrders}
+          orders={preparingOrders}
           onStatusChange={updateOrderStatus}
           nextStatus="Serving"
         />
@@ -374,10 +425,13 @@ function AdminPanel() {
           nextStatus="Served"
         />
 
-        <OrderSection title="Served Orders" orders={servedOrders} readOnly />
+        <OrderSection
+          title="Served Orders"
+          orders={servedOrders}
+          readOnly
+        />
       </section>
 
-      {/* ✅ Notification Box (Bottom-Right Corner) */}
       <div className="fixed bottom-5 right-5 space-y-3 z-50">
         <AnimatePresence>
           {notifications.map((n) => (
@@ -403,6 +457,7 @@ function OrderSection({ title, orders, onStatusChange, nextStatus, readOnly }) {
   return (
     <div className="mb-10">
       <h3 className="text-xl font-bold text-blue-800 mb-3">{title}</h3>
+
       {orders.length === 0 ? (
         <p className="text-gray-600 bg-white p-4 rounded-xl shadow">
           No orders in this section.
@@ -420,6 +475,7 @@ function OrderSection({ title, orders, onStatusChange, nextStatus, readOnly }) {
               <h3 className="text-lg font-bold text-blue-900 mb-1">
                 Order #{index + 1}
               </h3>
+
               <p className="text-xs text-gray-500 mb-2">
                 Placed:{" "}
                 {order.createdAt
@@ -430,16 +486,18 @@ function OrderSection({ title, orders, onStatusChange, nextStatus, readOnly }) {
               <p className="text-sm text-gray-700">
                 <strong>Type:</strong> {order.orderType}
               </p>
+
               <p className="text-sm text-gray-700">
                 <strong>Table:</strong> {order.tableNumber}
               </p>
+
               <p className="text-sm text-gray-700">
                 <strong>Status:</strong>{" "}
                 <span
                   className={`${
                     order.status === "Pending"
                       ? "text-yellow-600"
-                      : order.status === "Acknowledged"
+                      : order.status === "Preparing"
                       ? "text-blue-700"
                       : order.status === "Serving"
                       ? "text-orange-600"
@@ -454,7 +512,7 @@ function OrderSection({ title, orders, onStatusChange, nextStatus, readOnly }) {
               <ul className="list-disc ml-5 text-sm text-gray-600">
                 {order.items?.map((item, i) => (
                   <li key={i}>
-                    {item.name} × {item.quantity} — ₱{item.price}
+                    {item.name} x {item.quantity} - ₱{item.price}
                   </li>
                 ))}
               </ul>

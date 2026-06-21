@@ -17,12 +17,22 @@ function AdminLogin() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-amber-50">
+    <div className="flex items-center justify-center min-h-screen bg-amber-50 relative">
+
+      {/* BACK TO ROLE SELECTION */}
+      <button
+        onClick={() => window.location.href = "/"}
+        className="absolute top-5 left-5 bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+      >
+        ← Back
+      </button>
+
       <form
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm text-center"
       >
         <h2 className="text-2xl font-bold text-blue-900 mb-4">Admin Login</h2>
+
         <input
           type="email"
           placeholder="Admin Email"
@@ -31,6 +41,7 @@ function AdminLogin() {
           className="border p-3 rounded w-full mb-3"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -39,6 +50,7 @@ function AdminLogin() {
           className="border p-3 rounded w-full mb-4"
           required
         />
+
         <button
           type="submit"
           className="bg-blue-900 text-white w-full py-2 rounded hover:bg-blue-800 transition"
